@@ -54,7 +54,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               <option key={q.id} value={q.id}>{q.title}</option>
             ))}
           </select>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button formAction={createOnly} type="submit"
               className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors">
               Générer le lien
@@ -74,9 +74,9 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
         <div className="space-y-2">
           {client.submissions.map((s) => (
             <div key={s.id} className="px-4 py-3 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-800">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-start justify-between gap-2">
                 <p className="font-medium text-gray-900 dark:text-gray-100">{s.questionnaire.title}</p>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-wrap">
                   <StatusBadge status={s.status} />
                   <Link href={`/q/${s.token}`}
                     className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline">Remplir →</Link>
