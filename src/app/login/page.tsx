@@ -27,49 +27,69 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950">
-      <div className="w-full max-w-sm bg-white dark:bg-gray-900 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-800 p-8">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Connexion</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">Accès réservé au collectif</p>
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden" style={{ background: '#0f0e17' }}>
+      <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full opacity-20 blur-3xl pointer-events-none"
+        style={{ background: 'radial-gradient(circle, #7c3aed, transparent)' }} />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full opacity-15 blur-3xl pointer-events-none"
+        style={{ background: 'radial-gradient(circle, #4f46e5, transparent)' }} />
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Email
-            </label>
-            <input
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+      <div className="relative w-full max-w-sm mx-4">
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-12 h-12 rounded-2xl flex items-center justify-center text-white text-xl font-black mb-4"
+            style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>
+            C
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Mot de passe
-            </label>
-            <input
-              name="password"
-              type="password"
-              required
-              autoComplete="current-password"
-              className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
+          <h1 className="text-2xl font-bold text-white">CollectivForm</h1>
+          <p className="text-sm mt-1" style={{ color: '#6b7280' }}>Espace réservé au collectif</p>
+        </div>
 
-          {error && (
-            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-          )}
+        <div className="rounded-2xl p-6" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: '#9ca3af' }}>
+                Email
+              </label>
+              <input
+                name="email"
+                type="email"
+                required
+                autoComplete="email"
+                className="w-full px-3 py-2.5 rounded-xl text-sm text-white focus:outline-none transition-all"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                onFocus={e => (e.currentTarget.style.border = '1px solid rgba(124,58,237,0.6)')}
+                onBlur={e => (e.currentTarget.style.border = '1px solid rgba(255,255,255,0.1)')}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1.5" style={{ color: '#9ca3af' }}>
+                Mot de passe
+              </label>
+              <input
+                name="password"
+                type="password"
+                required
+                autoComplete="current-password"
+                className="w-full px-3 py-2.5 rounded-xl text-sm text-white focus:outline-none transition-all"
+                style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.1)' }}
+                onFocus={e => (e.currentTarget.style.border = '1px solid rgba(124,58,237,0.6)')}
+                onBlur={e => (e.currentTarget.style.border = '1px solid rgba(255,255,255,0.1)')}
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-medium rounded-lg transition-colors"
-          >
-            {loading ? 'Connexion…' : 'Se connecter'}
-          </button>
-        </form>
+            {error && (
+              <p className="text-sm text-red-400 rounded-lg px-3 py-2" style={{ background: 'rgba(239,68,68,0.1)' }}>{error}</p>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full py-2.5 px-4 text-white text-sm font-semibold rounded-xl transition-opacity disabled:opacity-50 mt-2"
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
+            >
+              {loading ? 'Connexion…' : 'Se connecter'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   )
