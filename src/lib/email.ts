@@ -1,7 +1,10 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000'
+
+function getResend() {
+  return new Resend(process.env.RESEND_API_KEY)
+}
 
 export async function sendSubmissionLink(opts: {
   to: string
@@ -9,6 +12,7 @@ export async function sendSubmissionLink(opts: {
   questTitle: string
   token: string
 }) {
+  const resend = getResend()
   const link = `${BASE_URL}/q/${opts.token}`
   await resend.emails.send({
     from: 'Collectif <noreply@weboform.fr>',
@@ -30,6 +34,7 @@ export async function sendCompletionNotification(opts: {
   sectionTitle: string
   submissionId: string
 }) {
+  const resend = getResend()
   const link = `${BASE_URL}/submissions/${opts.submissionId}`
   await resend.emails.send({
     from: 'Collectif <noreply@weboform.fr>',
