@@ -12,23 +12,23 @@ async function main() {
   const [dev, design, seo, social] = await Promise.all([
     prisma.user.upsert({
       where: { email: 'dev@collectif.fr' },
-      update: {},
-      create: { name: 'Alice Dev', email: 'dev@collectif.fr', password: hash, specialty: 'dev' },
+      update: { name: 'Max' },
+      create: { name: 'Max', email: 'dev@collectif.fr', password: hash, specialty: 'dev' },
     }),
     prisma.user.upsert({
       where: { email: 'design@collectif.fr' },
-      update: {},
-      create: { name: 'Bob Design', email: 'design@collectif.fr', password: hash, specialty: 'design' },
+      update: { name: 'Julien' },
+      create: { name: 'Julien', email: 'design@collectif.fr', password: hash, specialty: 'graphisme' },
     }),
     prisma.user.upsert({
       where: { email: 'seo@collectif.fr' },
-      update: {},
-      create: { name: 'Clara SEO', email: 'seo@collectif.fr', password: hash, specialty: 'seo' },
+      update: { name: 'Lauriane' },
+      create: { name: 'Lauriane', email: 'seo@collectif.fr', password: hash, specialty: 'seo' },
     }),
     prisma.user.upsert({
       where: { email: 'social@collectif.fr' },
-      update: {},
-      create: { name: 'David Social', email: 'social@collectif.fr', password: hash, specialty: 'social' },
+      update: { name: 'Lorène' },
+      create: { name: 'Lorène', email: 'social@collectif.fr', password: hash, specialty: 'marketing' },
     }),
   ])
 

@@ -1,6 +1,6 @@
 import { getClient } from '@/actions/clients'
 import { getQuestionnaires } from '@/actions/questionnaires'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { StatusBadge } from '@/components/ui/StatusBadge'
 import { createSubmissionAction } from '@/actions/submissions'
@@ -15,6 +15,23 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
 
   const templates = questionnaires.filter((q) => q.isTemplate)
 
+  const createAndFill = async (fd: FormData) => {
+    'use server'
+    const sub = await createSubmissionAction({
+      clientId: id,
+      questionnaireId: fd.get('questionnaireId') as string,
+    })
+    redirect(`/q/${sub.token}`)
+  }
+
+  const createOnly = async (fd: FormData) => {
+    'use server'
+    await createSubmissionAction({
+      clientId: id,
+      questionnaireId: fd.get('questionnaireId') as string,
+    })
+  }
+
   return (
     <div>
       <div className="mb-6">
@@ -25,14 +42,8 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       </div>
 
       <div className="mb-8 p-4 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
-        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Envoyer un questionnaire</h2>
-        <form action={async (fd: FormData) => {
-          'use server'
-          await createSubmissionAction({
-            clientId: id,
-            questionnaireId: fd.get('questionnaireId') as string,
-          })
-        }} className="flex flex-col gap-3">
+        <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Questionnaire</h2>
+        <form className="flex flex-col gap-3">
           <select name="questionnaireId" required
             className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
             <option value="">Choisir un questionnaire…</option>
@@ -40,10 +51,14 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               <option key={q.id} value={q.id}>{q.title}</option>
             ))}
           </select>
-          <div className="flex items-center">
-            <button type="submit"
+          <div className="flex items-center gap-2">
+            <button formAction={createOnly} type="submit"
+              className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-lg transition-colors">
+              Créer (envoyer plus tard)
+            </button>
+            <button formAction={createAndFill} type="submit"
               className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors">
-              Créer la submission
+              Remplir maintenant →
             </button>
           </div>
         </form>
@@ -59,11 +74,13 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
               <div>
                 <p className="font-medium text-gray-900 dark:text-gray-100">{s.questionnaire.title}</p>
                 <p className="text-xs text-gray-400 mt-0.5">
-                  Lien : {process.env.NEXT_PUBLIC_BASE_URL}/q/{s.token}
+                  Créé le {new Date(s.createdAt).toLocaleDateString('fr-FR')}
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <StatusBadge status={s.status} />
+                <Link href={`/q/${s.token}`}
+                  className="text-sm text-emerald-600 dark:text-emerald-400 hover:underline">Remplir →</Link>
                 <Link href={`/submissions/${s.id}`}
                   className="text-sm text-blue-600 dark:text-blue-400 hover:underline">Voir →</Link>
               </div>
