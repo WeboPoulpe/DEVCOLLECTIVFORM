@@ -17,7 +17,7 @@ export function Sidebar() {
     <aside className="w-60 shrink-0 flex flex-col bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 h-full">
       <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-800">
         <span className="text-lg font-bold text-gray-900 dark:text-gray-100 tracking-tight">
-          Weboform
+          CollectivForm
         </span>
       </div>
 

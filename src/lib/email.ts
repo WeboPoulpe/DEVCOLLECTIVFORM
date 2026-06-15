@@ -15,7 +15,7 @@ export async function sendSubmissionLink(opts: {
   const resend = getResend()
   const link = `${BASE_URL}/q/${opts.token}`
   await resend.emails.send({
-    from: 'Collectif <noreply@weboform.fr>',
+    from: 'Collectif <noreply@collectivform.fr>',
     to: opts.to,
     subject: `Votre questionnaire : ${opts.questTitle}`,
     html: `
@@ -37,7 +37,7 @@ export async function sendCompletionNotification(opts: {
   const resend = getResend()
   const link = `${BASE_URL}/submissions/${opts.submissionId}`
   await resend.emails.send({
-    from: 'Collectif <noreply@weboform.fr>',
+    from: 'Collectif <noreply@collectivform.fr>',
     to: opts.to,
     subject: `${opts.clientCompany} a complété sa section : ${opts.sectionTitle}`,
     html: `
