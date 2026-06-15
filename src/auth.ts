@@ -3,10 +3,10 @@ import Credentials from 'next-auth/providers/credentials'
 import bcrypt from 'bcryptjs'
 import { db } from '@/lib/db'
 import { z } from 'zod'
+import { authConfig } from './auth.config'
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  session: { strategy: 'jwt' },
-  pages: { signIn: '/login' },
+  ...authConfig,
   providers: [
     Credentials({
       credentials: {
@@ -29,20 +29,4 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
-  callbacks: {
-    jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
-        token.specialty = (user as { specialty?: string }).specialty
-      }
-      return token
-    },
-    session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string
-        ;(session.user as { specialty?: string }).specialty = token.specialty as string
-      }
-      return session
-    },
-  },
 })
