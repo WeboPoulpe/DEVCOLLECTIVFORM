@@ -30,33 +30,64 @@ interface FormClientProps {
   initialAnswers: Record<string, unknown>
 }
 
+const STEP_RGPD = 0
+const STEP_SELECTION = 1
+const STEP_FIRST_SECTION = 2
+
+function getSectionIcon(title: string) {
+  const t = title.toLowerCase()
+  if (t.includes('général') || t.includes('information')) return '📋'
+  if (t.includes('dev') || t.includes('web') || t.includes('tech')) return '💻'
+  if (t.includes('design') || t.includes('graphi') || t.includes('identit')) return '🎨'
+  if (t.includes('seo') || t.includes('contenu') || t.includes('référ')) return '🔍'
+  if (t.includes('réseau') || t.includes('social') || t.includes('market')) return '📱'
+  return '📝'
+}
+
 export function FormClient({ submissionId, questTitle, clientName, sections, initialAnswers }: FormClientProps) {
-  const [step, setStep] = useState(0) // 0 = RGPD, 1..N = sections, N+1 = recap, N+2 = done
+  const [step, setStep] = useState(STEP_RGPD)
   const [answers, setAnswers] = useState<Record<string, unknown>>(initialAnswers)
   const [consented, setConsented] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(sections.map(s => s.id)))
   const [submitting, setSubmitting] = useState(false)
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
-  const totalSteps = sections.length + 2 // RGPD + sections + recap
-  const isRgpdStep = step === 0
-  const isDoneStep = step === totalSteps
-  const isRecapStep = step === totalSteps - 1
-  const currentSection = !isRgpdStep && !isRecapStep && !isDoneStep ? sections[step - 1] : null
+  const activeSections = sections.filter(s => selectedIds.has(s.id))
+  const stepRecap = STEP_FIRST_SECTION + activeSections.length
+  const stepDone = stepRecap + 1
+
+  const isRgpdStep = step === STEP_RGPD
+  const isSelectionStep = step === STEP_SELECTION
+  const isRecapStep = step === stepRecap
+  const isDoneStep = step === stepDone
+  const currentSection = (!isRgpdStep && !isSelectionStep && !isRecapStep && !isDoneStep && step >= STEP_FIRST_SECTION)
+    ? activeSections[step - STEP_FIRST_SECTION]
+    : null
 
   const handleChange = useCallback((questionId: string, value: unknown) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: value }))
+    setAnswers(prev => ({ ...prev, [questionId]: value }))
     clearTimeout(saveTimers.current[questionId])
     saveTimers.current[questionId] = setTimeout(() => {
       upsertAnswer({ submissionId, questionId, value }).catch(console.error)
     }, 600)
   }, [submissionId])
 
+  function toggleSection(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
   function canProceed() {
     if (isRgpdStep) return consented
+    if (isSelectionStep) return selectedIds.size > 0
     if (!currentSection) return true
     return currentSection.questions
-      .filter((q) => q.required)
-      .every((q) => {
+      .filter(q => q.required)
+      .every(q => {
         const v = answers[q.id]
         if (v === undefined || v === null || v === '') return false
         if (Array.isArray(v) && v.length === 0) return false
@@ -67,71 +98,128 @@ export function FormClient({ submissionId, questTitle, clientName, sections, ini
   async function handleComplete() {
     setSubmitting(true)
     await completeSubmission(submissionId)
-    setStep(totalSteps)
+    setStep(stepDone)
     setSubmitting(false)
   }
 
   if (isDoneStep) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: '#f8fafc' }}>
         <div className="max-w-md text-center">
           <div className="text-6xl mb-6">🎉</div>
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-3">Merci, {clientName} !</h1>
-          <p className="text-gray-500 dark:text-gray-400">Vos réponses ont été enregistrées. Le collectif vous recontactera prochainement.</p>
+          <h1 className="text-2xl font-semibold text-gray-900 mb-3">Merci, {clientName} !</h1>
+          <p className="text-gray-500">Vos réponses ont été enregistrées. Le collectif vous recontactera prochainement.</p>
         </div>
       </div>
     )
   }
 
+  const showProgress = step >= STEP_FIRST_SECTION
+  const progressValue = step - STEP_FIRST_SECTION + 1
+  const progressMax = activeSections.length + 1
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 py-8 px-4">
+    <div className="min-h-screen py-8 px-4" style={{ background: '#f8fafc' }}>
       <div className="max-w-xl mx-auto">
+
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{questTitle}</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Bonjour {clientName}</p>
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-6 h-6 rounded flex items-center justify-center text-white text-xs font-black"
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}>C</div>
+            <span className="text-xs font-semibold text-gray-400 uppercase tracking-wide">CollectivForm</span>
+          </div>
+          <h1 className="text-xl font-bold text-gray-900">{questTitle}</h1>
+          <p className="text-sm text-gray-500 mt-0.5">Bonjour {clientName} 👋</p>
         </div>
 
-        {/* Progress */}
-        {!isRgpdStep && (
+        {/* Progress bar (sections only) */}
+        {showProgress && (
           <div className="mb-6">
-            <ProgressBar value={step} max={totalSteps - 1} label={`Étape ${step} sur ${totalSteps - 1}`} />
+            <ProgressBar
+              value={progressValue}
+              max={progressMax}
+              label={isRecapStep ? 'Récapitulatif' : `Section ${progressValue} sur ${activeSections.length}`}
+            />
           </div>
         )}
 
-        {/* RGPD step */}
+        {/* ─── RGPD ─── */}
         {isRgpdStep && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6 space-y-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Avant de commencer</h2>
-            <div className="text-gray-600 dark:text-gray-400 space-y-2 text-sm">
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+            <h2 className="text-lg font-semibold text-gray-900">Avant de commencer</h2>
+            <div className="text-gray-600 space-y-2 text-sm leading-relaxed">
               <p><strong>Finalité :</strong> Vos réponses servent à préparer votre projet avec le collectif.</p>
               <p><strong>Destinataires :</strong> Les membres du collectif impliqués dans votre projet uniquement.</p>
               <p><strong>Durée de conservation :</strong> 2 ans après la fin du projet.</p>
-              <p><strong>Vos droits :</strong> Pour toute demande de modification ou de suppression, contactez-nous à <a href="mailto:contact@collectif.fr" className="text-blue-600 dark:text-blue-400">contact@collectif.fr</a>.</p>
+              <p><strong>Vos droits :</strong> Pour toute demande, contactez-nous à{' '}
+                <a href="mailto:contact@collectif.fr" className="text-violet-600">contact@collectif.fr</a>.
+              </p>
             </div>
             <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={consented}
-                onChange={(e) => setConsented(e.target.checked)}
-                className="mt-0.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-              />
-              <span className="text-sm text-gray-700 dark:text-gray-300">
+              <input type="checkbox" checked={consented} onChange={e => setConsented(e.target.checked)}
+                className="mt-0.5 rounded border-gray-300 text-violet-600 focus:ring-violet-500" />
+              <span className="text-sm text-gray-700">
                 J'ai lu et j'accepte que mes données soient utilisées dans ce cadre.
               </span>
             </label>
           </div>
         )}
 
-        {/* Section step */}
-        {currentSection && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">{currentSection.title}</h2>
-            {currentSection.description && (
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">{currentSection.description}</p>
+        {/* ─── Sélection des sections ─── */}
+        {isSelectionStep && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">Que concerne votre projet ?</h2>
+            <p className="text-sm text-gray-500 mb-5">Sélectionnez uniquement les parties qui vous concernent — les autres seront ignorées.</p>
+            <div className="space-y-2">
+              {sections.map(section => {
+                const selected = selectedIds.has(section.id)
+                return (
+                  <button
+                    key={section.id}
+                    type="button"
+                    onClick={() => toggleSection(section.id)}
+                    className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border-2 text-left transition-all"
+                    style={{
+                      borderColor: selected ? '#7c3aed' : '#e5e7eb',
+                      background: selected ? '#faf5ff' : '#fff',
+                    }}
+                  >
+                    <span className="text-2xl shrink-0">{getSectionIcon(section.title)}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-gray-900 text-sm">{section.title}</p>
+                      {section.description && (
+                        <p className="text-xs text-gray-400 mt-0.5 truncate">{section.description}</p>
+                      )}
+                    </div>
+                    <div className="shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
+                      style={{ borderColor: selected ? '#7c3aed' : '#d1d5db', background: selected ? '#7c3aed' : 'transparent' }}>
+                      {selected && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+            {selectedIds.size === 0 && (
+              <p className="text-xs text-red-500 mt-3">Sélectionnez au moins une section pour continuer.</p>
             )}
+          </div>
+        )}
+
+        {/* ─── Section questions ─── */}
+        {currentSection && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-2xl">{getSectionIcon(currentSection.title)}</span>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">{currentSection.title}</h2>
+                {currentSection.description && (
+                  <p className="text-sm text-gray-400">{currentSection.description}</p>
+                )}
+              </div>
+            </div>
             <div className="space-y-6">
-              {currentSection.questions.map((q) => (
+              {currentSection.questions.map(q => (
                 <QuestionField
                   key={q.id}
                   questionId={q.id}
@@ -141,32 +229,35 @@ export function FormClient({ submissionId, questTitle, clientName, sections, ini
                   options={q.options}
                   required={q.required}
                   value={answers[q.id]}
-                  onChange={(v) => handleChange(q.id, v)}
+                  onChange={v => handleChange(q.id, v)}
                 />
               ))}
             </div>
           </div>
         )}
 
-        {/* Recap step */}
+        {/* ─── Récapitulatif ─── */}
         {isRecapStep && (
-          <div className="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Récapitulatif</h2>
+          <div className="bg-white rounded-2xl border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-5">Récapitulatif</h2>
             <div className="space-y-6">
-              {sections.map((section) => (
+              {activeSections.map(section => (
                 <div key={section.id}>
-                  <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{section.title}</h3>
-                  <div className="space-y-2">
-                    {section.questions.map((q) => {
+                  <div className="flex items-center gap-2 mb-2">
+                    <span>{getSectionIcon(section.title)}</span>
+                    <h3 className="text-sm font-semibold text-gray-700">{section.title}</h3>
+                  </div>
+                  <div className="space-y-1.5 pl-6">
+                    {section.questions.map(q => {
                       const v = answers[q.id]
-                      const display = v === undefined ? <span className="italic text-gray-400">Sans réponse</span>
-                        : Array.isArray(v) ? v.join(', ')
+                      if (v === undefined || v === null || v === '') return null
+                      const display = Array.isArray(v) ? v.join(', ')
                         : typeof v === 'boolean' ? (v ? 'Oui' : 'Non')
                         : String(v)
                       return (
                         <div key={q.id} className="text-sm">
-                          <span className="text-gray-500 dark:text-gray-400">{q.label} : </span>
-                          <span className="text-gray-900 dark:text-gray-100">{display}</span>
+                          <span className="text-gray-400">{q.label} : </span>
+                          <span className="text-gray-800 font-medium">{display}</span>
                         </div>
                       )
                     })}
@@ -177,13 +268,13 @@ export function FormClient({ submissionId, questTitle, clientName, sections, ini
           </div>
         )}
 
-        {/* Navigation */}
+        {/* ─── Navigation ─── */}
         <div className="flex justify-between mt-6">
           <button
             type="button"
-            onClick={() => setStep((s) => s - 1)}
+            onClick={() => setStep(s => s - 1)}
             disabled={step === 0}
-            className="px-5 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-30 transition-colors"
+            className="px-5 py-2.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 disabled:opacity-30 transition-colors"
           >
             Précédent
           </button>
@@ -193,21 +284,24 @@ export function FormClient({ submissionId, questTitle, clientName, sections, ini
               type="button"
               onClick={handleComplete}
               disabled={submitting}
-              className="px-5 py-2.5 text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 rounded-xl transition-colors"
+              className="px-5 py-2.5 text-sm font-semibold text-white rounded-xl disabled:opacity-50 transition-opacity"
+              style={{ background: 'linear-gradient(135deg, #059669, #10b981)' }}
             >
-              {submitting ? 'Envoi…' : 'Valider et envoyer'}
+              {submitting ? 'Envoi…' : '✓ Valider et envoyer'}
             </button>
           ) : (
             <button
               type="button"
-              onClick={() => setStep((s) => s + 1)}
+              onClick={() => setStep(s => s + 1)}
               disabled={!canProceed()}
-              className="px-5 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 rounded-xl transition-colors"
+              className="px-5 py-2.5 text-sm font-semibold text-white rounded-xl disabled:opacity-50 transition-opacity"
+              style={{ background: 'linear-gradient(135deg, #7c3aed, #4f46e5)' }}
             >
-              Suivant
+              Suivant →
             </button>
           )}
         </div>
+
       </div>
     </div>
   )
