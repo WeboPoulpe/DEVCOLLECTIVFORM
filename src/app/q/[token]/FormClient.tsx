@@ -134,7 +134,7 @@ export function FormClient({ submissionId, questTitle, clientName, sections, ini
   const progressMax = activeSections.length + 1
 
   return (
-    <div className="min-h-screen py-8 px-4" style={{ background: '#f8fafc' }}>
+    <div className="min-h-screen py-8 px-4" style={{ background: 'linear-gradient(135deg, #f5f3ff 0%, #eff6ff 60%, #f0fdf4 100%)' }}>
       <div className="max-w-xl mx-auto">
 
         {/* Header */}
@@ -161,7 +161,7 @@ export function FormClient({ submissionId, questTitle, clientName, sections, ini
 
         {/* ─── RGPD ─── */}
         {isRgpdStep && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 space-y-4">
             <h2 className="text-lg font-semibold text-gray-900">Avant de commencer</h2>
             <div className="text-gray-600 space-y-2 text-sm leading-relaxed">
               <p><strong>Finalité :</strong> Vos réponses servent à préparer votre projet avec le collectif.</p>
@@ -183,7 +183,7 @@ export function FormClient({ submissionId, questTitle, clientName, sections, ini
 
         {/* ─── Sélection des sections ─── */}
         {isSelectionStep && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-1">Que concerne votre projet ?</h2>
             <p className="text-sm text-gray-500 mb-5">Sélectionnez uniquement les parties qui vous concernent — les autres seront ignorées.</p>
             <div className="space-y-2">
@@ -247,7 +247,7 @@ export function FormClient({ submissionId, questTitle, clientName, sections, ini
 
         {/* ─── Section questions ─── */}
         {currentSection && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <div className="flex items-center gap-3 mb-4">
               <span className="text-2xl">{getSectionIcon(currentSection.title)}</span>
               <div>
@@ -277,7 +277,7 @@ export function FormClient({ submissionId, questTitle, clientName, sections, ini
 
         {/* ─── Récapitulatif ─── */}
         {isRecapStep && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-5">Récapitulatif</h2>
             <div className="space-y-6">
               {activeSections.map(section => (
