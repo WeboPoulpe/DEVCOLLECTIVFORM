@@ -49,10 +49,25 @@ export function FormClient({ submissionId, questTitle, clientName, sections, ini
   const [answers, setAnswers] = useState<Record<string, unknown>>(initialAnswers)
   const [consented, setConsented] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(sections.map(s => s.id)))
+  const [orderedIds, setOrderedIds] = useState<string[]>(sections.map(s => s.id))
   const [submitting, setSubmitting] = useState(false)
   const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
-  const activeSections = sections.filter(s => selectedIds.has(s.id))
+  const activeSections = orderedIds
+    .map(id => sections.find(s => s.id === id)!)
+    .filter(s => s && selectedIds.has(s.id))
+
+  function moveSection(id: string, dir: 'up' | 'down') {
+    setOrderedIds(prev => {
+      const idx = prev.indexOf(id)
+      if (idx === -1) return prev
+      const next = [...prev]
+      const swap = dir === 'up' ? idx - 1 : idx + 1
+      if (swap < 0 || swap >= next.length) return prev
+      ;[next[idx], next[swap]] = [next[swap], next[idx]]
+      return next
+    })
+  }
   const stepRecap = STEP_FIRST_SECTION + activeSections.length
   const stepDone = stepRecap + 1
 
@@ -172,31 +187,55 @@ export function FormClient({ submissionId, questTitle, clientName, sections, ini
             <h2 className="text-lg font-semibold text-gray-900 mb-1">Que concerne votre projet ?</h2>
             <p className="text-sm text-gray-500 mb-5">Sélectionnez uniquement les parties qui vous concernent — les autres seront ignorées.</p>
             <div className="space-y-2">
-              {sections.map(section => {
+              {orderedIds.map((id, idx) => {
+                const section = sections.find(s => s.id === id)
+                if (!section) return null
                 const selected = selectedIds.has(section.id)
                 return (
-                  <button
-                    key={section.id}
-                    type="button"
-                    onClick={() => toggleSection(section.id)}
-                    className="w-full flex items-center gap-4 px-4 py-3.5 rounded-xl border-2 text-left transition-all"
-                    style={{
-                      borderColor: selected ? '#7c3aed' : '#e5e7eb',
-                      background: selected ? '#faf5ff' : '#fff',
-                    }}
-                  >
-                    <span className="text-2xl shrink-0">{getSectionIcon(section.title)}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 text-sm">{section.title}</p>
-                      {section.description && (
-                        <p className="text-xs text-gray-400 mt-0.5 truncate">{section.description}</p>
-                      )}
+                  <div key={section.id} className="flex items-center gap-2">
+                    {/* Flèches de réordonnancement */}
+                    <div className="flex flex-col gap-0.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => moveSection(id, 'up')}
+                        disabled={idx === 0}
+                        className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-20 transition-all"
+                      >
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 8V2M2 5l3-3 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveSection(id, 'down')}
+                        disabled={idx === orderedIds.length - 1}
+                        className="w-6 h-6 flex items-center justify-center rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 disabled:opacity-20 transition-all"
+                      >
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M5 2v6M2 5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </button>
                     </div>
-                    <div className="shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
-                      style={{ borderColor: selected ? '#7c3aed' : '#d1d5db', background: selected ? '#7c3aed' : 'transparent' }}>
-                      {selected && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                    </div>
-                  </button>
+
+                    {/* Card cliquable */}
+                    <button
+                      type="button"
+                      onClick={() => toggleSection(section.id)}
+                      className="flex-1 flex items-center gap-3 px-4 py-3 rounded-xl border-2 text-left transition-all"
+                      style={{
+                        borderColor: selected ? '#7c3aed' : '#e5e7eb',
+                        background: selected ? '#faf5ff' : '#f9fafb',
+                      }}
+                    >
+                      <span className="text-xl shrink-0">{getSectionIcon(section.title)}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-900 text-sm">{section.title}</p>
+                        {section.description && (
+                          <p className="text-xs text-gray-400 mt-0.5 truncate">{section.description}</p>
+                        )}
+                      </div>
+                      <div className="shrink-0 w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all"
+                        style={{ borderColor: selected ? '#7c3aed' : '#d1d5db', background: selected ? '#7c3aed' : 'transparent' }}>
+                        {selected && <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 3" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                      </div>
+                    </button>
+                  </div>
                 )
               })}
             </div>
