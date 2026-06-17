@@ -6,7 +6,7 @@ import { sendSubmissionLink, sendCompletionNotification } from '@/lib/email'
 import { revalidatePath } from 'next/cache'
 import { QuestionType } from '@prisma/client'
 
-export async function createSubmissionAction(data: { clientId: string; questionnaireId: string; expiresAt?: string }) {
+export async function createSubmissionAction(data: { clientId: string; questionnaireId: string; expiresAt?: string; allowedSectionIds?: string[] }) {
   await auth()
   const parsed = createSubmissionSchema.parse(data)
   const submission = await db.submission.create({
@@ -14,6 +14,7 @@ export async function createSubmissionAction(data: { clientId: string; questionn
       clientId: parsed.clientId,
       questionnaireId: parsed.questionnaireId,
       expiresAt: parsed.expiresAt ? new Date(parsed.expiresAt) : undefined,
+      allowedSectionIds: data.allowedSectionIds ?? null,
     },
   })
   revalidatePath(`/clients/${parsed.clientId}`)

@@ -25,6 +25,11 @@ export default async function PublicFormPage({ params }: { params: Promise<{ tok
 
   if (!submission) notFound()
 
+  const allowedIds = submission.allowedSectionIds as string[] | null
+  const visibleSections = allowedIds
+    ? submission.questionnaire.sections.filter(s => allowedIds.includes(s.id))
+    : submission.questionnaire.sections
+
   if (submission.expiresAt && submission.expiresAt < new Date()) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-950 p-4">
@@ -58,7 +63,7 @@ export default async function PublicFormPage({ params }: { params: Promise<{ tok
       submissionId={submission.id}
       questTitle={submission.questionnaire.title}
       clientName={submission.client.contactName}
-      sections={submission.questionnaire.sections}
+      sections={visibleSections}
       initialAnswers={initialAnswers}
     />
   )

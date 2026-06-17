@@ -22,6 +22,19 @@ export async function getQuestionnaires() {
   return db.questionnaire.findMany({ orderBy: { createdAt: 'desc' } })
 }
 
+export async function getQuestionnairesWithSections() {
+  await auth()
+  return db.questionnaire.findMany({
+    orderBy: { createdAt: 'desc' },
+    include: {
+      sections: {
+        orderBy: { order: 'asc' },
+        select: { id: true, title: true, order: true },
+      },
+    },
+  })
+}
+
 export async function getQuestionnaire(id: string) {
   await auth()
   return db.questionnaire.findUnique({

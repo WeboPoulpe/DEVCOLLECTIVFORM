@@ -88,10 +88,11 @@ model Submission {
   clientId        String
   questionnaire   Questionnaire @relation(fields: [questionnaireId], references: [id])
   questionnaireId String
-  token           String        @unique @default(cuid())
-  status          SubStatus     @default(SENT)
-  expiresAt       DateTime?
-  completedAt     DateTime?
+  token             String        @unique @default(cuid())
+  status            SubStatus     @default(SENT)
+  allowedSectionIds Json?
+  expiresAt         DateTime?
+  completedAt       DateTime?
   answers         Answer[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
