@@ -14,7 +14,7 @@ export async function createSubmissionAction(data: { clientId: string; questionn
       clientId: parsed.clientId,
       questionnaireId: parsed.questionnaireId,
       expiresAt: parsed.expiresAt ? new Date(parsed.expiresAt) : undefined,
-      allowedSectionIds: data.allowedSectionIds ?? null,
+      allowedSectionIds: data.allowedSectionIds,
     },
   })
   revalidatePath(`/clients/${parsed.clientId}`)
